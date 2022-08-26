@@ -1,0 +1,6 @@
+.nextflow/
+work/
+.nextflow.log*
+trace.txt*
+params_default.config
+ref_*/

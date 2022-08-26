@@ -1,0 +1,27 @@
+params {
+
+    // dependency paths
+    AUGUSTUS_CONFIG_PATH    = "${HOME}/Augustus/config/"
+    AUGUSTUS_SCRIPTS_PATH   = "${HOME}/Augustus/scripts/"
+    AUGUSTUS_BIN_PATH       = "${HOME}/Augustus/bin/"
+    COMPANION_BIN_PATH      = "${HOME}/companion/bin/"
+    EUPATHWS_SCRIPTS_PATH   = "${HOME}/eupathws/scripts/"
+    PORTHOMCL_PATH          = "${HOME}/PorthoMCL"
+
+    // path to publish the Reference directories to
+    REFERENCE_PATH = "${baseDir}/ref_vectorbase"
+
+    // VEuPathDB parameters
+    veupathdb_username = "user@example.com"
+    veupathdb_password = "xxxxxxxxxxxxx"
+    veupathdb_domain = 'https://vectorbase.org/vectorbase'
+    veupathdb_group = "VectorBase"
+
+    // PorthoMCL parameters
+    porthomcl_threads = 4
+
+    // enable/disable parts of the pipeline
+    do_augustus = true
+    do_orthomcl = true
+
+}
