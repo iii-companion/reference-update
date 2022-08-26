@@ -13,8 +13,7 @@ process get_reference_species {
     """
 }
 
-// TODO remove limit of 4 (used for testing)
-species_ch.splitText( limit: 4 ).map{it -> it.trim()}.set { org }
+species_ch.splitText().map{it -> it.trim()}.set { org }
 process get_organism {
     conda 'environment.yml'
     publishDir "${params.REFERENCE_PATH}", mode: 'copy'
