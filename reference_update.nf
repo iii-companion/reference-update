@@ -16,6 +16,7 @@ process get_reference_species {
 species_ch.splitText().map{it -> it.trim()}.set { org }
 process get_organism {
     conda 'environment.yml'
+    maxForks 8
     publishDir "${params.REFERENCE_PATH}", mode: 'copy'
 
     input:
@@ -49,6 +50,7 @@ if (params.do_augustus) {
         path "${x}.gff3" into gff3_out
 
       """
+      AUGUSTUS_CONFIG_PATH=${params.AUGUSTUS_CONFIG_PATH} \
       ${params.AUGUSTUS_SCRIPTS_PATH}/new_species.pl --species=${x} --ignore
       ${params.AUGUSTUS_SCRIPTS_PATH}/gff2gbSmallDNA.pl ${x}.gff3 ${x}_Genome.fasta 1000 sampled.gb
       ${params.AUGUSTUS_BIN_PATH}/etraining --species=${x} sampled.gb
