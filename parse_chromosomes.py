@@ -39,7 +39,7 @@ if __name__ == "__main__":
             prefix, freq = common_prefixes(chromosomes)[0]
         else:
             prefix, freq = chromosomes[0].split("_")[0] + "_", 1
-        if prefix:
+        if prefix and not (freq == 1 and len(regions) > 1):
             suffix = ""
             with_suffix = list(filter(re.compile(r".*_v\d+$").match, chromosomes))
             if any(with_suffix):
