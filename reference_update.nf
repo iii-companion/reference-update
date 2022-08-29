@@ -67,9 +67,8 @@ process prepare_references {
     output:
       path "Reference/references-in.json" into references_in
       
-    // TODO need a better method for generating ChromosomeFile.txt
     """
-    touch ChromosomeFile.txt
+    for x in *.gff3; do python ${baseDir}/parse_chromosomes.py \$x; done > ChromosomeFile.txt
     mkdir -p Reference
     ls *gff3 | perl ${baseDir}/generateReferences-i.json.pl ${params.REFERENCE_PATH} ${params.veupathdb_group} ${params.AUGUSTUS_CONFIG_PATH} > Reference/references-in.json    
     """

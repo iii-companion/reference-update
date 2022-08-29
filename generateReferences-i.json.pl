@@ -3,7 +3,6 @@ use strict;
 my $path=shift;
 my $groupName=shift;
 my $augCfgPath=shift;
-# for x in *gff3 ; do  n=$(egrep ^##sequence-region.*_01 clean_gff/$x |  perl -nle 'if(/(\S+)_01_(v\d+)/){ print "$1\t$2"} elsif(/(\S+)_01/){ print $1 } ' ); echo -e "$x\t$n"; done > ChromosomeFile.txt
 
 my %h;
 open F, "ChromosomeFile.txt" or die " wrong DIR:$!\n";
