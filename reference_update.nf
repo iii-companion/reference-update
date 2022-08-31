@@ -68,6 +68,7 @@ process prepare_references {
 
     output:
       path "Reference/references-in.json" into references_in
+      path "ChromosomeFile.txt"
       
     """
     for x in *.gff3; do python ${baseDir}/parse_chromosomes.py \$x; done > ChromosomeFile.txt
