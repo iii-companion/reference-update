@@ -38,11 +38,9 @@ process get_organism {
     """
 }
 
-org_ch.into{ org_ch_aug
-              org_ch_orth }
 
 if (params.do_augustus) {
-  org_ch_aug.splitText().map{it -> it.trim()}.set { org } 
+  org_ch.splitText().map{it -> it.trim()}.set { org } 
   process train_augustus {
       input:
         val x from org
@@ -98,7 +96,6 @@ process update_references{
     """
 }
 
-total_orgs = org_ch_orth.count().val
 if (params.do_orthomcl) {
   // TODO cite https://bdataanalytics.biomedcentral.com/articles/10.1186/s41044-016-0019-8
   process run_porthomcl {
@@ -115,9 +112,13 @@ if (params.do_orthomcl) {
 
       """
       orgs=`ls 0.input_faa | wc -l`
-      avail_cpus=`python ${baseDir}/calc_cpus.py \$orgs ${total_orgs} ${task.cpus}`
-      ${params.PORTHOMCL_PATH}/porthomcl.sh -t \$avail_cpus .
-      ${params.PORTHOMCL_PATH}/orthomclMclToGroups ORTHOMCL 0 < 8.all.ort.group > all_orthomcl.out
+      if [[ \$orgs -gt 1 ]]
+      then
+        ${params.PORTHOMCL_PATH}/porthomcl.sh -t ${task.cpus} .
+        ${params.PORTHOMCL_PATH}/orthomclMclToGroups ORTHOMCL 0 < 8.all.ort.group > all_orthomcl.out
+      else
+        touch all_orthomcl.out
+      fi
       """
   }
 }
