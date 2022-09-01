@@ -61,40 +61,41 @@ if (params.do_augustus) {
 }
 
 process prepare_references {
-    publishDir "${params.REFERENCE_PATH}", mode: 'copy'
-
     input:
       path "*" from gff3_out.collect()
 
     output:
-      path "Reference/references-in.json" into references_in
-      path "ChromosomeFile.txt"
+      file "references-in-*.json" into references_in
+      path "groups.txt" into groups
       
     """
     for x in *.gff3; do python ${baseDir}/parse_chromosomes.py \$x; done > ChromosomeFile.txt
-    mkdir -p Reference
-    ls *gff3 | perl ${baseDir}/generateReferences-i.json.pl ${params.REFERENCE_PATH} ${params.veupathdb_group} ${params.AUGUSTUS_CONFIG_PATH} > Reference/references-in.json    
+    ls *.gff3 | awk -F'[_]' '{print \$1}' | sort | uniq -c | awk '{if (\$1 > 0) print \$2}' > groups.txt
+    for x in `cat groups.txt`; do ls \$x* | perl ${baseDir}/generateReferences-i.json.pl ${params.REFERENCE_PATH} \$x ${params.AUGUSTUS_CONFIG_PATH} > references-in-\$x.json; done    
     """
 }
 
-// TODO make update_references.lua internal to this package and allow it to run in parallel for each species
+groups.splitText().map{it -> it.trim()}.set { group }
 process update_references{
     debug true
-    publishDir "${params.REFERENCE_PATH}/Reference", mode: 'copy'
+    publishDir "${params.REFERENCE_PATH}/Ref_${x}", mode: 'copy'
 
     input:
-      path references_in
+      val x from group
+      file "*" from references_in
     
     output:
       path "*", type: "dir"
       path "references.json"
-      path "*/proteins.fasta" into prots
+      path "${x}*/proteins.fasta" into prots
 
     """
+    cp references-in-${x}.json references-in.json
     ${params.COMPANION_BIN_PATH}/update_references.lua
     """
 }
 
+total_orgs = org_ch.count().val
 if (params.do_orthomcl) {
   // TODO cite https://bdataanalytics.biomedcentral.com/articles/10.1186/s41044-016-0019-8
   process run_porthomcl {
@@ -110,7 +111,9 @@ if (params.do_orthomcl) {
         path "all_orthomcl.out"
 
       """
-      ${params.PORTHOMCL_PATH}/porthomcl.sh -t ${task.cpus} .
+      orgs=`ls 0.input_faa | wc -l`
+      avail_cpus=`python ${baseDir}/calc_cpus.py \$orgs ${total_orgs} ${task.cpus}`
+      ${params.PORTHOMCL_PATH}/porthomcl.sh -t \$avail_cpus .
       ${params.PORTHOMCL_PATH}/orthomclMclToGroups ORTHOMCL 0 < 8.all.ort.group > all_orthomcl.out
       """
   }
