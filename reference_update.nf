@@ -90,7 +90,7 @@ process update_references{
     output:
       path "*", type: "dir"
       path "references.json"
-      path "${x}*/proteins.fasta" into prots
+      tuple val(x), path("${x}*/proteins.fasta") into prots
 
     """
     cp references-in-${x}.json references-in.json
@@ -105,10 +105,10 @@ if (params.do_orthomcl) {
       conda 'python=2.7'
       cpus params.porthomcl_threads
       debug true
-      publishDir "${params.REFERENCE_PATH}/Reference/_all", mode: 'copy'
+      publishDir "${params.REFERENCE_PATH}/Ref_${grp}/_all", mode: 'copy'
 
       input:
-        path "0.input_faa/proteins*.fasta" from prots
+        tuple val(grp), path("0.input_faa/proteins*.fasta") from prots
       
       output:
         path "all_orthomcl.out"
