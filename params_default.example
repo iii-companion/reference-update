@@ -15,7 +15,6 @@ params {
     veupathdb_username = "user@example.com"
     veupathdb_password = "xxxxxxxxxxxxx"
     veupathdb_domain = 'https://vectorbase.org/vectorbase'
-    veupathdb_group = "VectorBase"
 
     // PorthoMCL parameters
     porthomcl_threads = 4
