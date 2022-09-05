@@ -79,7 +79,14 @@ process prepare_references {
 groups.splitText().map{it -> it.trim()}.set { group }
 process update_references{
     debug true
-    publishDir "${params.REFERENCE_PATH}/Ref_${x}", mode: 'copy'
+    publishDir "${params.REFERENCE_PATH}/Ref_${x}", mode: 'copy',
+      saveAs: { filename ->
+        if(filename.startsWith("${x}") & filename.endsWith(".fasta")) {
+          null
+        } else {
+        filename
+        }
+      }
 
     input:
       val x from group
@@ -88,11 +95,12 @@ process update_references{
     output:
       path "*", type: "dir"
       path "references.json"
-      tuple val(x), path("${x}*/proteins.fasta") into prots
+      tuple val(x), path("${x}*.fasta") into prots
 
     """
     cp references-in-${x}.json references-in.json
     ${params.COMPANION_BIN_PATH}/update_references.lua
+    for y in ${x}_*/proteins.fasta; do cp \$y "\$(dirname \$y).fasta"; done
     """
 }
 
@@ -105,7 +113,7 @@ if (params.do_orthomcl) {
       publishDir "${params.REFERENCE_PATH}/Ref_${grp}/_all", mode: 'copy'
 
       input:
-        tuple val(grp), path("0.input_faa/proteins*.fasta") from prots
+        tuple val(grp), path("0.input_faa/*") from prots
       
       output:
         path "all_orthomcl.out"
