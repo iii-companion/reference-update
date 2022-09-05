@@ -129,4 +129,18 @@ if (params.do_orthomcl) {
       fi
       """
   }
+} else {
+  process empty_orthomcl {
+    publishDir "${params.REFERENCE_PATH}/Ref_${grp}/_all", mode: 'copy'
+
+    input:
+      tuple val(grp), path from prots
+    
+    output:
+      path "all_orthomcl.out"
+
+    """
+    touch all_orthomcl.out
+    """
+  }
 }
