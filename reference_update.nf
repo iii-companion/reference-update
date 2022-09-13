@@ -33,6 +33,7 @@ if (!params.from_local){
       """
       ${params.EUPATHWS_SCRIPTS_PATH}/get_organism -l ${params.veupathdb_username}:${params.veupathdb_password} ${params.veupathdb_domain} \"${org}\"
       rename "s/-| /_/g"  *
+      rename "s/[\\)\\(]//g" *
       mkdir clean_gff
       for x in *.gff3 ; do gt gff3 -sort -retainids -tidy \$x > clean_gff/\$x & done
       ls *.gff3 | sed 's/.gff3//g'
@@ -55,6 +56,7 @@ if (!params.from_local){
     
     """
     rename "s/-| /_/g"  *
+    rename "s/[\\)\\(]//g" *
     mkdir clean_gff
     for x in *.gff3 ; do gt gff3 -sort -retainids -tidy \$x > clean_gff/\$x & done
     ls *.gff3 | sed 's/.gff3//g'
