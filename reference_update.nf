@@ -16,6 +16,7 @@ process get_reference_species {
 species_ch.splitText().map{it -> it.trim()}.set { org }
 process get_organism {
     conda 'environment.yml'
+    errorStrategy 'ignore'
     maxForks 8
     publishDir "${params.REFERENCE_PATH}", mode: 'copy'
 
