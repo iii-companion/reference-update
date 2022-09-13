@@ -1,52 +1,74 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=1
 
+if (!params.from_local){
+  process get_reference_species {
+      conda 'environment.yml'
+      
+      output:
+        stdout species_ch
 
-process get_reference_species {
-    conda 'environment.yml'
-    
-    output:
-      stdout species_ch
+      """
+      IFS=\$'\\n'; ${params.EUPATHWS_SCRIPTS_PATH}/get_reference_species -l ${params.veupathdb_username}:${params.veupathdb_password} ${params.veupathdb_domain}
+      """
+  }
 
-    """
-    IFS=\$'\\n'; ${params.EUPATHWS_SCRIPTS_PATH}/get_reference_species -l ${params.veupathdb_username}:${params.veupathdb_password} ${params.veupathdb_domain}
-    """
-}
+  species_ch.splitText().map{it -> it.trim()}.set { org }
+  process get_organism {
+      conda 'environment.yml'
+      errorStrategy 'ignore'
+      maxForks 8
+      publishDir "${params.REFERENCE_PATH}", mode: 'copy'
 
-species_ch.splitText().map{it -> it.trim()}.set { org }
-process get_organism {
-    conda 'environment.yml'
-    errorStrategy 'ignore'
-    maxForks 8
+      input:
+        val org
+
+      output:
+        path 'clean_gff/*.gff3' into org_gff3
+        path '*_Proteins.fasta'
+        path '*_Genome.fasta' into org_fasta
+        path '*.gaf'
+        stdout org_ch
+        
+      """
+      ${params.EUPATHWS_SCRIPTS_PATH}/get_organism -l ${params.veupathdb_username}:${params.veupathdb_password} ${params.veupathdb_domain} \"${org}\"
+      rename "s/ /_/g"  *
+      mkdir clean_gff
+      for x in *.gff3 ; do gt gff3 -sort -retainids -tidy \$x > clean_gff/\$x & done
+      ls *.gff3 | sed 's/.gff3//g'
+      """
+  }
+} else {
+  species_ch = Channel.fromPath( String.format( "%s/*", params.from_local ) )
+  process get_all_local_organisms {
     publishDir "${params.REFERENCE_PATH}", mode: 'copy'
 
     input:
-      val org
+      path "*" from species_ch.collect()
 
     output:
       path 'clean_gff/*.gff3' into org_gff3
-      path '*_Proteins.fasta' into org_prot_fasta
-      path '*_Genome.fasta' into org_fasta
-      path '*.gaf' into org_gaf
+      path '*_Proteins.fasta', includeInputs: true
+      path '*_Genome.fasta', includeInputs: true into org_fasta
+      path '*.gaf', includeInputs: true
       stdout org_ch
-      
+    
     """
-    ${params.EUPATHWS_SCRIPTS_PATH}/get_organism -l ${params.veupathdb_username}:${params.veupathdb_password} ${params.veupathdb_domain} \"${org}\"
     rename "s/ /_/g"  *
     mkdir clean_gff
     for x in *.gff3 ; do gt gff3 -sort -retainids -tidy \$x > clean_gff/\$x & done
     ls *.gff3 | sed 's/.gff3//g'
     """
+  }
 }
-
 
 if (params.do_augustus) {
   org_ch.splitText().map{it -> it.trim()}.set { org } 
   process train_augustus {
       input:
         val x from org
-        path "${x}.gff3" from org_gff3
-        path "${x}_Genome.fasta" from org_fasta
+        path "*" from org_gff3
+        path "*" from org_fasta
       
       output:
         path "${x}.gff3" into gff3_out
