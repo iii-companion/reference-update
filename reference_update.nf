@@ -143,8 +143,10 @@ if (!params.do_all_vs_all){
       tuple val(null), path("*.fasta") into prots
 
     """
-    for x in references-in-*.json; do cp \$x references-in.json; ${params.COMPANION_BIN_PATH}/update_references.lua; done
+    echo "{\\"groups\\":{},\\"species\\":{}}" >> references.tmp
+    for x in references-in-*.json; do cp \$x references-in.json; ${params.COMPANION_BIN_PATH}/update_references.lua; jq -s '.[0] * .[1]' references.tmp references.json | sponge references.tmp; done
     for y in */proteins.fasta; do cp \$y "\$(dirname \$y).fasta"; done
+    mv references.tmp references.json
     """
   }
 }
