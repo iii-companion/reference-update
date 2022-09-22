@@ -101,62 +101,82 @@ process prepare_references {
     """
 }
 
-groups.splitText().map{it -> it.trim()}.set { group }
-process update_references{
-    debug true
-    publishDir "${params.REFERENCE_PATH}/Ref_${x}", mode: 'copy',
-      saveAs: { filename ->
-        if(filename.startsWith("${x}") & filename.endsWith(".fasta")) {
-          null
-        } else {
-        filename
+if (!params.do_all_vs_all){
+  groups.splitText().map{it -> it.trim()}.set { group }
+  process update_references{
+      debug true
+      publishDir "${params.REFERENCE_PATH}/Ref_${x}", mode: 'copy',
+        saveAs: { filename ->
+          if(filename.startsWith("${x}") & filename.endsWith(".fasta")) {
+            null
+          } else {
+            filename
+          }
         }
-      }
+
+      input:
+        val x from group
+        file "*" from references_in
+      
+      output:
+        path "*", type: "dir"
+        path "references.json"
+        tuple val(x), path("${x}*.fasta") into prots
+
+      """
+      cp references-in-${x}.json references-in.json
+      ${params.COMPANION_BIN_PATH}/update_references.lua
+      for y in ${x}_*/proteins.fasta; do cp \$y "\$(dirname \$y).fasta"; done
+      """
+  }
+} else {
+  process update_all_references{
+    debug true
+    publishDir "${params.REFERENCE_PATH}/Reference", mode: 'copy'        
 
     input:
-      val x from group
       file "*" from references_in
     
     output:
       path "*", type: "dir"
       path "references.json"
-      tuple val(x), path("${x}*.fasta") into prots
+      tuple val(null), path("*.fasta") into prots
 
     """
-    cp references-in-${x}.json references-in.json
-    ${params.COMPANION_BIN_PATH}/update_references.lua
-    for y in ${x}_*/proteins.fasta; do cp \$y "\$(dirname \$y).fasta"; done
+    for x in references-in-*.json; do cp \$x references-in.json; ${params.COMPANION_BIN_PATH}/update_references.lua; done
+    for y in */proteins.fasta; do cp \$y "\$(dirname \$y).fasta"; done
     """
+  }
 }
 
 if (params.do_orthomcl) {
   // TODO cite https://bdataanalytics.biomedcentral.com/articles/10.1186/s41044-016-0019-8
   process run_porthomcl {
-      conda 'python=2.7'
-      cpus params.porthomcl_threads
-      debug true
-      publishDir "${params.REFERENCE_PATH}/Ref_${grp}/_all", mode: 'copy'
+    conda 'python=2.7'
+    cpus params.porthomcl_threads
+    debug true
+    publishDir params.do_all_vs_all ? "${params.REFERENCE_PATH}/Reference/_all" : "${params.REFERENCE_PATH}/Ref_${grp}/_all", mode: 'copy'      
 
-      input:
-        tuple val(grp), path("0.input_faa/*") from prots
-      
-      output:
-        path "all_orthomcl.out"
+    input:
+      tuple val(grp), path("0.input_faa/*") from prots
+    
+    output:
+      path "all_orthomcl.out"
 
-      """
-      orgs=`ls 0.input_faa | wc -l`
-      if [[ \$orgs -gt 1 ]]
-      then
-        ${params.PORTHOMCL_PATH}/porthomcl.sh -t ${task.cpus} .
-        ${params.PORTHOMCL_PATH}/orthomclMclToGroups ORTHOMCL 0 < 8.all.ort.group > all_orthomcl.out
-      else
-        touch all_orthomcl.out
-      fi
-      """
+    """
+    orgs=`ls 0.input_faa | wc -l`
+    if [[ \$orgs -gt 1 ]]
+    then
+      ${params.PORTHOMCL_PATH}/porthomcl.sh -t ${task.cpus} .
+      ${params.PORTHOMCL_PATH}/orthomclMclToGroups ORTHOMCL 0 < 8.all.ort.group > all_orthomcl.out
+    else
+      touch all_orthomcl.out
+    fi
+    """
   }
 } else {
   process empty_orthomcl {
-    publishDir "${params.REFERENCE_PATH}/Ref_${grp}/_all", mode: 'copy'
+    publishDir params.do_all_vs_all ? "${params.REFERENCE_PATH}/Reference/_all" : "${params.REFERENCE_PATH}/Ref_${grp}/_all", mode: 'copy'
 
     input:
       tuple val(grp), path from prots

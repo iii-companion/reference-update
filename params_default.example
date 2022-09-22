@@ -23,5 +23,6 @@ params {
     // enable/disable parts of the pipeline
     do_augustus = true
     do_orthomcl = true
+    do_all_vs_all = false
 
 }
