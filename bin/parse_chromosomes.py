@@ -5,7 +5,6 @@ import os
 import re
 import sys
 
-gff = sys.argv[1]
 patterns = ["[0-9][0-9]", "[0-9]",]
 
 
@@ -27,7 +26,7 @@ def common_prefixes(li):
     return prefixes
 
 
-if __name__ == "__main__":
+def parse_chromosomes(gff):
     species, _ = os.path.splitext(os.path.basename(gff))
     regex = ""
     with open(gff, 'rt') as f:
@@ -57,4 +56,9 @@ if __name__ == "__main__":
             if not best_pattern:
                 best_pattern = ".*"
             regex = "{}({}){}".format(prefix, best_pattern, suffix)
-    print("\t".join(filter(None, (species, regex))))
+    return "\t".join(filter(None, (species, regex)))
+
+
+if __name__ == "__main__":
+    gff = sys.argv[1]
+    print(parse_chromosomes(gff))
