@@ -52,6 +52,7 @@ if (!params.from_local){
       path '*_Proteins.fasta', includeInputs: true
       path '*_Genome.fasta', includeInputs: true into org_fasta
       path '*.gaf', includeInputs: true
+      path 'all_annotated_proteins.fasta'
       stdout org_ch
     
     """
@@ -59,6 +60,7 @@ if (!params.from_local){
     rename "s/[\\)\\(]//g" *
     mkdir clean_gff
     for x in *.gff3 ; do gt gff3 -sort -retainids -tidy \$x > clean_gff/\$x & done
+    cat *_Proteins.fasta > all_annotated_proteins.fasta
     ls *.gff3 | sed 's/.gff3//g'
     """
   }
