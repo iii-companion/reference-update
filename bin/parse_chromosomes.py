@@ -34,15 +34,15 @@ def parse_chromosomes(gff):
     regions = [list(filter(None, l.split(" ")))[1] for l in data if l.startswith("##sequence-region")]
     chromosomes = [r for r in regions if "_" in r]
     if chromosomes:
-        if len(chromosomes) > 1:
+        with_suffix = list(filter(re.compile(r".*_v\d+$").match, chromosomes))
+        if len(with_suffix) > 1:
+            prefix, freq = common_prefixes(with_suffix)[0]
+        elif len(chromosomes) > 1:
             prefix, freq = common_prefixes(chromosomes)[0]
         else:
             prefix, freq = chromosomes[0].split("_")[0] + "_", 1
         if prefix and not (freq == 1 and len(regions) > 1):
-            suffix = ""
-            with_suffix = list(filter(re.compile(r".*_v\d+$").match, chromosomes))
-            if any(with_suffix):
-                suffix = re.search(r"_v\d+", with_suffix[0]).group()
+            suffix = re.search(r"_v\d+", with_suffix[0]).group() if any(with_suffix) else ""
             r = re.compile(r"{}.*{}$".format(prefix, suffix))
             filt_chromosomes = list(filter(r.match, chromosomes))
             max_match = 0
