@@ -4,3 +4,4 @@ work/
 trace.txt*
 params_default.config
 ref_*/
+__pycache__
