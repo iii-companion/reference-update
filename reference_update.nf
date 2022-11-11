@@ -1,6 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=1
 
+VERSION = 0.1
+
 if (!params.from_local){
   process get_reference_species {
       conda 'environment.yml'
@@ -99,7 +101,7 @@ process prepare_references {
     """
     for x in *.gff3; do python ${baseDir}/bin/parse_chromosomes.py \$x; done > ChromosomeFile.txt
     ls *.gff3 | awk -F'[_]' '{print \$1}' | sort | uniq -c | awk '{if (\$1 > 0) print \$2}' > groups.txt
-    for x in `cat groups.txt`; do ls \$x* | perl ${baseDir}/bin/generateReferences-i.json.pl ${params.REFERENCE_PATH} \$x ${params.AUGUSTUS_CONFIG_PATH} ${params.VERSION} > references-in-\$x.json; done    
+    for x in `cat groups.txt`; do ls \$x* | perl ${baseDir}/bin/generateReferences-i.json.pl ${params.REFERENCE_PATH} \$x ${params.AUGUSTUS_CONFIG_PATH} ${VERSION} > references-in-\$x.json; done    
     """
 }
 

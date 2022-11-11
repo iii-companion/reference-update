@@ -1,7 +1,5 @@
 params {
 
-    VERSION = 0.1
-
     // dependency paths
     AUGUSTUS_CONFIG_PATH    = "${HOME}/Augustus/config/"
     AUGUSTUS_SCRIPTS_PATH   = "${HOME}/Augustus/scripts/"
