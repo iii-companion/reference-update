@@ -1,4 +1,5 @@
 use strict;
+use JSON qw(decode_json);
 use Tie::Scalar::Timestamp;
 
 my $path=shift;
@@ -17,10 +18,24 @@ while(<F>){
 }
 close(F);
 
+my $rel = 1;
+my $refs = "$path/Ref_$groupName/references.json";
+if (-e $refs){
+    open(my $refs_file, "<", $refs) or die "Can't open < references.json: $!";
+    local $/;
+    my $json_string = <$refs_file>;
+    my $json_data = decode_json($json_string);
+    if ($json_data->{version} == $v){
+        $rel = $json_data->{release} + 1;
+    }
+    close($refs_file);
+}
+
 tie my $timestamp, 'Tie::Scalar::Timestamp';
 
 print "{\n";
 print " \"version\" : $v,\n";
+print " \"release\" : $rel,\n";
 print " \"timestamp\" : \"$timestamp\",\n";
 print " \"species\" : {\n";
 my $group;
