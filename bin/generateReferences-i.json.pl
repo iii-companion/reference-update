@@ -1,4 +1,5 @@
 use strict;
+use Tie::Scalar::Timestamp;
 
 my $path=shift;
 my $groupName=shift;
@@ -15,7 +16,10 @@ while(<F>){
 }
 close(F);
 
+tie my $timestamp, 'Tie::Scalar::Timestamp';
+
 print "{\n";
+print " \"timestamp\" : \"$timestamp\",\n";
 print " \"species\" : {\n";
 my $group;
 while(<STDIN>){
