@@ -4,6 +4,7 @@ use Tie::Scalar::Timestamp;
 my $path=shift;
 my $groupName=shift;
 my $augCfgPath=shift;
+my $v=shift;
 
 my %h;
 open F, "ChromosomeFile.txt" or die " wrong DIR:$!\n";
@@ -19,6 +20,7 @@ close(F);
 tie my $timestamp, 'Tie::Scalar::Timestamp';
 
 print "{\n";
+print " \"version\" : $v,\n";
 print " \"timestamp\" : \"$timestamp\",\n";
 print " \"species\" : {\n";
 my $group;
