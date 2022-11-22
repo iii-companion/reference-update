@@ -27,7 +27,7 @@ if (!params.from_local){
 
       output:
         path 'clean_gff/*.gff3' into org_gff3
-        path '*_Proteins.fasta'
+        path '*_Proteins.fasta' into org_prots
         path '*_Genome.fasta' into org_fasta
         path '*.gaf'
         stdout org_ch
@@ -41,6 +41,9 @@ if (!params.from_local){
       ls *.gff3 | sed 's/.gff3//g'
       """
   }
+
+  org_prots.collectFile(name: "all_annotated_proteins.fasta", storeDir: "${params.REFERENCE_PATH}")
+
 } else {
   species_ch = Channel.fromPath( String.format( "%s/*", params.from_local ) )
   process get_all_local_organisms {
