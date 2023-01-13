@@ -30,6 +30,7 @@ if (!params.from_local){
         path '*_Proteins.fasta' into org_prots
         path '*_Genome.fasta' into org_fasta
         path '*.gaf'
+        path '*.random.fa' into org_fasta_random
         stdout org_ch
         
       """
@@ -38,6 +39,7 @@ if (!params.from_local){
       rename "s/[\\)\\(]//g" *
       mkdir clean_gff
       for x in *.gff3 ; do gt gff3 -sort -retainids -tidy \$x > clean_gff/\$x & done
+      for x in *_Genome.fasta ; do randomreads.sh ref=\$x out=\$x.random.fa length=20000 reads=5 & done
       ls *.gff3 | sed 's/.gff3//g'
       """
   }
@@ -47,7 +49,7 @@ if (!params.from_local){
 } else {
   species_ch = Channel.fromPath( String.format( "%s/*", params.from_local ) )
   process get_all_local_organisms {
-    publishDir "${params.REFERENCE_PATH}", mode: 'copy'
+    publishDir "${params.REFERENCE_PATH}"ref_dir, mode: 'copy'
 
     input:
       path "*" from species_ch.collect()
@@ -57,6 +59,7 @@ if (!params.from_local){
       path '*_Proteins.fasta', includeInputs: true
       path '*_Genome.fasta', includeInputs: true into org_fasta
       path '*.gaf', includeInputs: true
+      path '*.random.fa' into org_fasta_random
       path 'all_annotated_proteins.fasta'
       stdout org_ch
     
@@ -65,14 +68,20 @@ if (!params.from_local){
     rename "s/[\\)\\(]//g" *
     mkdir clean_gff
     for x in *.gff3 ; do gt gff3 -sort -retainids -tidy \$x > clean_gff/\$x & done
+    for x in *_Genome.fasta ; do randomreads.sh ref=\$x out=\$x.random.fa length=20000 reads=5 & done
     cat *_Proteins.fasta > all_annotated_proteins.fasta
     ls *.gff3 | sed 's/.gff3//g'
     """
   }
 }
 
+org_ch.into{
+  augustus_org_ch
+  validation_org_ch
+}
+
 if (params.do_augustus) {
-  org_ch.splitText().map{it -> it.trim()}.set { org } 
+  augustus_org_ch.splitText().map{it -> it.trim()}.set { org } 
   process train_augustus {
       input:
         val x from org
@@ -127,7 +136,7 @@ if (!params.do_all_vs_all){
       
       output:
         path "*", type: "dir"
-        path "references.json"
+        path "references.json" into refs
         tuple val(x), path("${x}*.fasta") into prots
 
       """
@@ -146,7 +155,7 @@ if (!params.do_all_vs_all){
     
     output:
       path "*", type: "dir"
-      path "references.json"
+      path "references.json" into refs
       tuple val(null), path("*.fasta") into prots
 
     """
@@ -195,6 +204,41 @@ if (params.do_orthomcl) {
 
     """
     touch all_orthomcl.out
+    """
+  }
+}
+
+if (params.validate_refs) {
+  validation_org_ch.splitText().map{it -> it.trim()}.set { org }
+  process run_validation {
+    errorStrategy 'ignore'
+    afterScript """if [ \$(cat .exitcode) -gt 0 ] ; then echo ${ref_species} >>  ${ref_d}/failed_refs.txt ; fi"""
+
+    if (params.do_all_vs_all) {
+      ref_dir = "${params.REFERENCE_PATH}/Reference"
+    } else {
+      ref_dir = "${params.REFERENCE_PATH}"
+    }
+
+    input:
+      path "*" from org_fasta_random
+      val ref_species from org      
+      val ref_d from ref_dir
+      path "*" from refs
+
+    """
+    if [ ! -d ${ref_d}/${ref_species} ]
+    then
+      ref_dir="\$(dirname ${ref_d}/*/${ref_species})"
+      echo \$ref_dir
+    else
+      ref_dir=${ref_d}
+    fi
+
+    nextflow run ${params.COMPANION_SCRIPT_PATH} -profile docker -c ${baseDir}/params_companion.config -with-trace \
+     --inseq ${ref_species}*.random.fa \
+     --ref_dir \$ref_dir \
+     --ref_species ${ref_species} \
     """
   }
 }

@@ -5,6 +5,7 @@ params {
     AUGUSTUS_SCRIPTS_PATH   = "${HOME}/Augustus/scripts/"
     AUGUSTUS_BIN_PATH       = "${HOME}/Augustus/bin/"
     COMPANION_BIN_PATH      = "${HOME}/companion/bin/"
+    COMPANION_SCRIPT_PATH   = "${HOME}/companion/annot.nf"
     EUPATHWS_SCRIPTS_PATH   = "${HOME}/eupathws/scripts/"
     PORTHOMCL_PATH          = "${HOME}/PorthoMCL"
 
@@ -24,5 +25,6 @@ params {
     do_augustus = true
     do_orthomcl = true
     do_all_vs_all = false
+    validate_refs = true
 
 }
