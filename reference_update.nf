@@ -212,7 +212,7 @@ if (params.validate_refs) {
   validation_org_ch.splitText().map{it -> it.trim()}.set { org }
   process run_validation {
     errorStrategy 'ignore'
-    afterScript """if [ \$(cat .exitcode) -gt 0 ] ; then echo ${ref_species} >>  ${ref_d}/failed_refs.txt ; fi"""
+    afterScript """if [[ \${nxf_main_ret:=0} != 0 ]] ; then echo ${ref_species} >>  ${ref_d}/failed_refs.txt ; fi"""
 
     if (params.do_all_vs_all) {
       ref_dir = "${params.REFERENCE_PATH}/Reference"
