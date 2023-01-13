@@ -224,7 +224,7 @@ if (params.validate_refs) {
       path "*" from org_fasta_random
       val ref_species from org      
       val ref_d from ref_dir
-      path "*" from refs
+      path "references.json" from refs.collect()
 
     """
     if [ ! -d ${ref_d}/${ref_species} ]
