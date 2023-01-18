@@ -260,7 +260,7 @@ if (params.validate_refs) {
     afterScript """if [[ \${nxf_main_ret:=0} != 0 ]] ; then echo ${ref_species} >>  ${ref_d}/failed_refs.txt ; fi"""
 
     input:
-      path "*" from org_fasta_sampled
+      path "*" from org_fasta_sampled.collect()
       val ref_species from org      
       val ref_d from ref_dir
 
