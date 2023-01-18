@@ -234,6 +234,7 @@ if (params.validate_refs) {
   }
 
   process prepare_validation {
+    cache false
     beforeScript """rm -f ${ref_d}/failed_refs.txt"""
 
     if (params.do_all_vs_all) {
