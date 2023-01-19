@@ -18,6 +18,9 @@ params {
     veupathdb_domain = 'https://vectorbase.org/vectorbase'
     from_local = ""
 
+    // OrthoDB parameters
+    orthodb_path = "https://v100.orthodb.org/download/odb10_fungi_fasta.tar.gz"
+
     // PorthoMCL parameters
     porthomcl_threads = 4
 

@@ -3,6 +3,25 @@ nextflow.enable.dsl=1
 
 VERSION = 0.1
 
+process create_orthodb {
+
+  input:
+    val orthodb_path from "${params.orthodb_path}"
+
+  output:
+    path "orthodb.fasta" into orthodb_fasta
+
+  """
+  url_regex='^(https?|ftp|file)://[-A-Za-z0-9\\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\\+&@#/%=~_|]\\.[-A-Za-z0-9\\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\\+&@#/%=~_|]\$'
+
+  if [[ ${orthodb_path} =~ \$url_regex ]]; then wget ${orthodb_path}; else ln -s ${orthodb_path}; fi
+
+  if [[ `ls *.tar.gz 2> /dev/null` ]]; then tar -xvf *.tar.gz ; fi
+  
+  cat */Rawdata/* > orthodb.fasta
+  """
+}
+
 if (!params.from_local){
   process get_reference_species {
       conda 'environment.yml'
@@ -24,6 +43,7 @@ if (!params.from_local){
 
       input:
         val org
+        path "orthodb.fasta" from orthodb_fasta
 
       output:
         path 'clean_gff/*.gff3' into org_gff3
@@ -42,15 +62,16 @@ if (!params.from_local){
       """
   }
 
-  org_prots.collectFile(name: "all_annotated_proteins.fasta", storeDir: "${params.REFERENCE_PATH}")
+  org_prots.concat(orthodb_fasta).collectFile(name: "all_annotated_proteins.fasta", storeDir: "${params.REFERENCE_PATH}")
 
 } else {
   species_ch = Channel.fromPath( String.format( "%s/*", params.from_local ) )
   process get_all_local_organisms {
-    publishDir "${params.REFERENCE_PATH}"ref_dir, mode: 'copy'
+    publishDir "${params.REFERENCE_PATH}", mode: 'copy'
 
     input:
       path "*" from species_ch.collect()
+      path "orthodb.fasta" from orthodb_fasta
 
     output:
       path 'clean_gff/*.gff3' into org_gff3
@@ -65,7 +86,7 @@ if (!params.from_local){
     rename "s/[\\)\\(]//g" *
     mkdir clean_gff
     for x in *.gff3 ; do gt gff3 -sort -retainids -tidy \$x > clean_gff/\$x & done
-    cat *_Proteins.fasta > all_annotated_proteins.fasta
+    cat *_Proteins.fasta orthodb.fasta > all_annotated_proteins.fasta
     ls *.gff3 | sed 's/.gff3//g'
     """
   }
