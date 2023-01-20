@@ -231,27 +231,42 @@ if (params.do_orthomcl) {
 }
 
 if (params.validate_refs) {
+  if (params.validate_refs == "sampled") {
+    process sample_fasta_for_validation {
+      errorStrategy 'ignore'
 
-  process sample_fasta_for_validation {
-    errorStrategy 'ignore'
-
-    input:
-      path "*" from org_fasta_validation
+      input:
+        path "*" from org_fasta_validation
     
-    output:
-      path '*.sampled.fa' into org_fasta_sampled
+      output:
+        path '*.sampled.fa' into org_fasta_sampled
 
-    """
-    in=\$(basename *_Genome.fasta)
-    out=\$in.sampled.fa
-    seqkit seq -m 10000 -M 500000 \$in > 1
-    reformat.sh in=1 out=\$out reads=2 minlength=10000 overwrite=true
+      """
+      in=\$(basename *_Genome.fasta)
+      out=\$in.sampled.fa
+      seqkit seq -m 10000 -M 500000 \$in > 1
+      reformat.sh in=1 out=\$out reads=2 minlength=10000 overwrite=true
 
-    if [ ! -s \$out ]
-    then
-      exit 1
-    fi
-    """
+      if [ ! -s \$out ]
+      then
+        exit 1
+      fi
+      """
+    }
+  else if (params.validate_refs == "full") {
+    process full_fasta_for_validation {
+      input:
+        path "*" from org_fasta_validation
+      
+      output:
+        path '*.sampled.fa' into org_fasta_sampled
+      
+      """
+      in=\$(basename *_Genome.fasta)
+      out=\$in.sampled.fa
+      cp \$in \$out
+      """
+    }
   }
 
   process prepare_validation {
