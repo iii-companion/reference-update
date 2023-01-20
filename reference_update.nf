@@ -253,7 +253,7 @@ if (params.validate_refs) {
       fi
       """
     }
-  else if (params.validate_refs == "full") {
+  } else if (params.validate_refs == "full") {
     process full_fasta_for_validation {
       input:
         path "*" from org_fasta_validation
