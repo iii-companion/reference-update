@@ -291,6 +291,11 @@ if (params.validate_refs) {
     """
   }
 
+  ref_dir.into{
+    ref_dir_val
+    ref_dir_filt
+  }
+
   validation_org_ch.splitText().map{it -> it.trim()}.set { org }
   process run_validation {
     errorStrategy 'ignore'
@@ -299,7 +304,10 @@ if (params.validate_refs) {
     input:
       path "*" from org_fasta_sampled.collect()
       val ref_species from org      
-      val ref_d from ref_dir
+      val ref_d from ref_dir_val
+
+    output:
+      path ".exitcode" into exitcode
 
     """
     if [ ! -d ${ref_d}/${ref_species} ]
@@ -314,6 +322,19 @@ if (params.validate_refs) {
      --inseq ${ref_species}*.sampled.fa \
      --ref_dir \$ref_dir \
      --ref_species ${ref_species} \
+    """
+  }
+
+  process filter_failed_refs {
+    input:
+      path "*" from exitcode.collect()
+      val ref_d from ref_dir_filt
+    
+    """
+    for x in ${ref_d}/failed_refs.txt; do
+      refs=`grep -Ril ${params.REFERENCE_PATH}/*/references.json -e '\$x'`
+      jq '.species.\$x += { "validated": false }' \$refs
+    done
     """
   }
 }
