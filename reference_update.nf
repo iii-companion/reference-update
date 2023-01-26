@@ -289,6 +289,7 @@ if (params.validate_refs) {
 
     """
     touch ${ref_d}/failed_refs.txt
+    touch ${ref_d}/good_refs.txt
     """
   }
 
@@ -300,7 +301,14 @@ if (params.validate_refs) {
   validation_org_ch.splitText().map{it -> it.trim()}.set { org }
   process run_validation {
     errorStrategy 'ignore'
-    afterScript """if [[ \${nxf_main_ret:=0} != 0 ]] ; then echo ${ref_species} >>  ${ref_d}/failed_refs.txt ; fi"""
+    afterScript """
+    if [[ \${nxf_main_ret:=0} != 0 ]]
+    then
+      echo ${ref_species} >> ${ref_d}/failed_refs.txt
+    else
+      echo ${ref_species} >> ${ref_d}/good_refs.txt
+    fi
+    """
 
     input:
       path "*" from org_fasta_sampled.collect()
