@@ -4,6 +4,7 @@ nextflow.enable.dsl=1
 VERSION = 0.1
 
 process create_orthodb {
+  afterScript 'rm -rf */Rawdata'
 
   input:
     val orthodb_path from "${params.orthodb_path}"
@@ -16,7 +17,7 @@ process create_orthodb {
 
   if [[ ${orthodb_path} =~ \$url_regex ]]; then wget ${orthodb_path}; else ln -s ${orthodb_path}; fi
 
-  if [[ `ls *.tar.gz 2> /dev/null` ]]; then tar -xvf *.tar.gz ; fi
+  if [[ `ls *.tar.gz 2> /dev/null` ]]; then tar -xvf *.tar.gz ; rm *.tar.gz; fi
   
   cat */Rawdata/* > orthodb.fasta
   """
