@@ -45,6 +45,7 @@ class ChromosomeParser:
             try:
                 prefix, freq = next(prefix_pool)
             except StopIteration:
+                print(self.species)
                 # self.pattern = ".*"
                 # self.prefix, _, _ = next(self._iter_prefix_pool())
                 raise
