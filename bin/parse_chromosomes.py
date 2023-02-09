@@ -46,9 +46,10 @@ class ChromosomeParser:
                 prefix, freq = next(prefix_pool)
             except StopIteration:
                 print(self.species)
+                return
                 # self.pattern = ".*"
                 # self.prefix, _, _ = next(self._iter_prefix_pool())
-                raise
+                # raise
             if prefix and not (freq == 1 and len(self.sequence_regions) > 1):
                 r = re.compile(r"{}.*{}$".format(prefix, self.suffix), re.IGNORECASE)
                 filt_candidates = list(filter(r.match, self.chr_candidates))
@@ -80,11 +81,14 @@ class ChromosomeParser:
         # ]
     
     def correct_prefix(self):
-        r = re.compile(r"{}$".format(self.regex), re.IGNORECASE)
-        first_match = list(filter(r.match, self.chr_candidates))[0]
-        prefix = re.split('_|\.', first_match)[0]
-        separator = first_match.split(prefix)[1][0]
-        self.prefix = prefix + separator
+        try:
+            r = re.compile(r"{}$".format(self.regex), re.IGNORECASE)
+            first_match = list(filter(r.match, self.chr_candidates))[0]
+            prefix = re.split('_|\.', first_match)[0]
+            separator = first_match.split(prefix)[1][0]
+            self.prefix = prefix + separator
+        except:
+            print(self.species)
 
 def common_prefixes(li):
     prefixes = []

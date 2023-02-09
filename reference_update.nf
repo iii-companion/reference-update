@@ -51,6 +51,7 @@ if (!params.from_local){
         path '*_Proteins.fasta' into org_prots
         path '*_Genome.fasta' into org_fasta
         path '*.gaf'
+        path '*_chr.json' into org_chrs
         stdout org_ch
         
       """
@@ -79,6 +80,7 @@ if (!params.from_local){
       path '*_Proteins.fasta', includeInputs: true
       path '*_Genome.fasta', includeInputs: true into org_fasta
       path '*.gaf', includeInputs: true
+      path '*_chr.json' into org_chrs
       path 'all_annotated_proteins.fasta'
       stdout org_ch
     
@@ -128,6 +130,7 @@ if (params.do_augustus) {
 process prepare_references {
     input:
       path "*" from gff3_out.collect()
+      path "*" from org_chrs.collect()
 
     output:
       file "references-in-*.json" into references_in
@@ -136,7 +139,7 @@ process prepare_references {
     """
     for x in *.gff3; do python ${baseDir}/bin/parse_chromosomes.py \$x; done > ChromosomeFile.txt
     ls *.gff3 | awk -F'[_]' '{print \$1}' | sort | uniq -c | awk '{if (\$1 > 0) print \$2}' > groups.txt
-    for x in `cat groups.txt`; do ls \$x* | perl ${baseDir}/bin/generateReferences-i.json.pl ${params.REFERENCE_PATH} \$x ${params.AUGUSTUS_CONFIG_PATH} ${VERSION} > references-in-\$x.json; done    
+    for x in `cat groups.txt`; do ls \$x*.gff3 | perl ${baseDir}/bin/generateReferences-i.json.pl ${params.REFERENCE_PATH} \$x ${params.AUGUSTUS_CONFIG_PATH} ${VERSION} > references-in-\$x.json; done    
     """
 }
 

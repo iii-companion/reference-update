@@ -48,6 +48,18 @@ while(<STDIN>){
     $name=~ s/.gff3//g;
     
     my $root=$n; $root=~s/\.gff3//g;
+
+    my $chrs = "$root\_chr.json";
+    my $json;
+    if (-e $chrs){
+        {
+        local $/;
+        open (my $fh, "<", $chrs) or die $!;
+        $json = <$fh>;
+        close $fh;
+        }
+    }
+
     $group.="\"".$root."\",";
     print "    \"$root\" : {\n";
     print "      \"gff\" : \"$path/clean_gff/$_\",\n";
@@ -55,16 +67,19 @@ while(<STDIN>){
     print "      \"proteins\" : \"$path/$root\_Proteins.fasta\",\n";
     print "      \"gaf\" : \"$path/$root.gaf\",\n";
     if (-d "$augCfgPath/species/$root"){
-    print "      \"augustus_model\": \"$augCfgPath/species/$root\",\n";
+        print "      \"augustus_model\": \"$augCfgPath/species/$root\",\n";
     }
-     if (defined($h{$root})){
-	 print "      \"name\" : \"$name - in chromosomes\",\n";
-     } else {
-	 print "      \"name\" : \"$name\",\n";
-     }
-    ## get the chromosome stuff ok
     if (defined($h{$root})){
-	print "      \"chromosome_pattern\" : \"".$h{$root}."\",\n";
+	    print "      \"name\" : \"$name - in chromosomes\",\n";
+    } else {
+	    print "      \"name\" : \"$name\",\n";
+    }
+    # get the chromosome stuff ok
+    if (defined($h{$root})){
+	    print "      \"chromosome_pattern\" : \"".$h{$root}."\",\n";
+    }
+    if (defined($json)){
+        print "      \"chr_mapping\": $json,\n";
     }
     print "      \"is_reference_strain\": true\n";
   
