@@ -75,9 +75,9 @@ while(<STDIN>){
 	    print "      \"name\" : \"$name\",\n";
     }
     # get the chromosome stuff ok
-    if (defined($h{$root})){
-	    print "      \"chromosome_pattern\" : \"".$h{$root}."\",\n";
-    }
+    # if (defined($h{$root})){
+	#     print "      \"chromosome_pattern\" : \"".$h{$root}."\",\n";
+    # }
     if (defined($json)){
         print "      \"chr_mapping\": $json,\n";
     }
