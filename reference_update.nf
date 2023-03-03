@@ -219,17 +219,41 @@ if (params.do_orthomcl) {
     """
   }
 } else {
-  process empty_orthomcl {
+  // process empty_orthomcl {
+  //   publishDir params.do_all_vs_all ? "${params.REFERENCE_PATH}/Reference/_all" : "${params.REFERENCE_PATH}/Ref_${grp}/_all", mode: 'copy'
+
+  //   input:
+  //     tuple val(grp), path from prots
+    
+  //   output:
+  //     path "all_orthomcl.out"
+
+  //   """
+  //   touch all_orthomcl.out
+  //   """
+  // }
+  process run_orthofinder {
+    cpus params.porthomcl_threads
+    debug true
     publishDir params.do_all_vs_all ? "${params.REFERENCE_PATH}/Reference/_all" : "${params.REFERENCE_PATH}/Ref_${grp}/_all", mode: 'copy'
 
     input:
-      tuple val(grp), path from prots
+      tuple val(grp), path("0.input_faa/*") from prots
     
     output:
       path "all_orthomcl.out"
-
+    
     """
-    touch all_orthomcl.out
+    orgs=`ls 0.input_faa | wc -l`
+    if [[ \$orgs -gt 1 ]]
+    then      
+      orthofinder.py -f 0.input_faa/ -o results -t ${task.cpus}
+      
+      # filter out clusters with single gene.
+      awk 'BEGIN { FS="[ ]" }; { if (\$3) print \$0 }' results/*/Orthogroups/Orthogroups.txt > all_orthomcl.out
+    else
+      touch all_orthomcl.out
+    fi
     """
   }
 }
