@@ -38,7 +38,8 @@ if (!params.from_local){
   species_ch.splitText().map{it -> it.trim()}.set { org }
   process get_organism {
       conda 'environment.yml'
-      errorStrategy 'ignore'
+      errorStrategy 'retry'
+      maxRetries 5
       maxForks 8
       publishDir "${params.REFERENCE_PATH}", mode: 'copy'
 
