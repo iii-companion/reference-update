@@ -247,7 +247,7 @@ if (params.do_orthomcl) {
     orgs=`ls 0.input_faa | wc -l`
     if [[ \$orgs -gt 1 ]]
     then      
-      orthofinder.py -f 0.input_faa/ -o results -t ${task.cpus}
+      ${params.ORTHOFINDER_PATH}/orthofinder.py -f 0.input_faa/ -o results -t ${task.cpus}
       
       # filter out clusters with single gene.
       awk 'BEGIN { FS="[ ]" }; { if (\$3) print \$0 }' results/*/Orthogroups/Orthogroups.txt > all_orthomcl.out

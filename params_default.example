@@ -8,6 +8,7 @@ params {
     COMPANION_SCRIPT_PATH   = "${HOME}/companion/annot.nf"
     EUPATHWS_SCRIPTS_PATH   = "${HOME}/eupathws/scripts/"
     PORTHOMCL_PATH          = "${HOME}/PorthoMCL"
+    ORTHOFINDER_PATH        = "${HOME}/OrthoFinder_source"
 
     // path to publish the Reference directories to
     REFERENCE_PATH = "${baseDir}/ref_vectorbase"
