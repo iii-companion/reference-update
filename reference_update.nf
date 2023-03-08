@@ -169,7 +169,12 @@ if (!params.do_all_vs_all){
       """
       cp references-in-${x}.json references-in.json
       ${params.COMPANION_BIN_PATH}/update_references.lua
-      for y in ${x}_*/proteins.fasta; do cp \$y "\$(dirname \$y).fasta"; done
+      for y in ${x}_*/proteins.fasta
+      do
+        species="\$(dirname \$y)"
+        cp \$y \$species.fa
+        ${params.COMPANION_BIN_PATH}/adjust_fasta_header.pl \$species \$species.fa 1
+      done
       """
   }
 } else {
