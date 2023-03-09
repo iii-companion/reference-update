@@ -38,7 +38,8 @@ if (!params.from_local){
   species_ch.splitText().map{it -> it.trim()}.set { org }
   process get_organism {
       conda 'environment.yml'
-      errorStrategy 'ignore'
+      errorStrategy 'retry'
+      maxRetries 5
       maxForks 8
       publishDir "${params.REFERENCE_PATH}", mode: 'copy'
 
@@ -137,7 +138,7 @@ process prepare_references {
       path "groups.txt" into groups
       
     """
-    for x in *.gff3; do python ${baseDir}/bin/parse_chromosomes.py \$x; done > ChromosomeFile.txt
+    for x in *.gff3; do python3 ${baseDir}/bin/parse_chromosomes.py \$x; done > ChromosomeFile.txt
     ls *.gff3 | awk -F'[_]' '{print \$1}' | sort | uniq -c | awk '{if (\$1 > 0) print \$2}' > groups.txt
     for x in `cat groups.txt`; do ls \$x*.gff3 | perl ${baseDir}/bin/generateReferences-i.json.pl ${params.REFERENCE_PATH} \$x ${params.AUGUSTUS_CONFIG_PATH} ${VERSION} > references-in-\$x.json; done    
     """
@@ -168,7 +169,12 @@ if (!params.do_all_vs_all){
       """
       cp references-in-${x}.json references-in.json
       ${params.COMPANION_BIN_PATH}/update_references.lua
-      for y in ${x}_*/proteins.fasta; do cp \$y "\$(dirname \$y).fasta"; done
+      for y in ${x}_*/proteins.fasta
+      do
+        species="\$(dirname \$y)"
+        cp \$y \$species.fa
+        ${params.COMPANION_BIN_PATH}/adjust_fasta_header.pl \$species \$species.fa 1
+      done
       """
   }
 } else {
@@ -193,13 +199,11 @@ if (!params.do_all_vs_all){
   }
 }
 
-if (params.do_orthomcl) {
-  // TODO cite https://bdataanalytics.biomedcentral.com/articles/10.1186/s41044-016-0019-8
-  process run_porthomcl {
-    conda 'python=2.7'
-    cpus params.porthomcl_threads
+if (params.do_orthofinder) {
+  process run_orthofinder {
+    cpus params.diamond_threads
     debug true
-    publishDir params.do_all_vs_all ? "${params.REFERENCE_PATH}/Reference/_all" : "${params.REFERENCE_PATH}/Ref_${grp}/_all", mode: 'copy'      
+    publishDir params.do_all_vs_all ? "${params.REFERENCE_PATH}/Reference/_all" : "${params.REFERENCE_PATH}/Ref_${grp}/_all", mode: 'copy'
 
     input:
       tuple val(grp), path("0.input_faa/*") from prots
@@ -211,15 +215,17 @@ if (params.do_orthomcl) {
     orgs=`ls 0.input_faa | wc -l`
     if [[ \$orgs -gt 1 ]]
     then
-      ${params.PORTHOMCL_PATH}/porthomcl.sh -t ${task.cpus} .
-      ${params.PORTHOMCL_PATH}/orthomclMclToGroups ORTHOMCL 0 < 8.all.ort.group > all_orthomcl.out
+      ${params.ORTHOFINDER_PATH}/orthofinder.py -f 0.input_faa/ -o results -t ${task.cpus}
+
+      # filter out clusters with single gene.
+      awk 'BEGIN { FS="[ ]" }; { if (\$3) print \$0 }' results/*/Orthogroups/Orthogroups.txt > all_orthomcl.out
     else
       touch all_orthomcl.out
     fi
     """
   }
 } else {
-  process empty_orthomcl {
+  process empty_orthogroups {
     publishDir params.do_all_vs_all ? "${params.REFERENCE_PATH}/Reference/_all" : "${params.REFERENCE_PATH}/Ref_${grp}/_all", mode: 'copy'
 
     input:

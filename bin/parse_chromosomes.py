@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 from collections import Counter
 from itertools import groupby, zip_longest
 from operator import itemgetter
