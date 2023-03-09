@@ -199,13 +199,11 @@ if (!params.do_all_vs_all){
   }
 }
 
-if (params.do_orthomcl) {
-  // TODO cite https://bdataanalytics.biomedcentral.com/articles/10.1186/s41044-016-0019-8
-  process run_porthomcl {
-    conda 'python=2.7'
-    cpus params.porthomcl_threads
+if (params.do_orthofinder) {
+  process run_orthofinder {
+    cpus params.diamond_threads
     debug true
-    publishDir params.do_all_vs_all ? "${params.REFERENCE_PATH}/Reference/_all" : "${params.REFERENCE_PATH}/Ref_${grp}/_all", mode: 'copy'      
+    publishDir params.do_all_vs_all ? "${params.REFERENCE_PATH}/Reference/_all" : "${params.REFERENCE_PATH}/Ref_${grp}/_all", mode: 'copy'
 
     input:
       tuple val(grp), path("0.input_faa/*") from prots
@@ -217,48 +215,30 @@ if (params.do_orthomcl) {
     orgs=`ls 0.input_faa | wc -l`
     if [[ \$orgs -gt 1 ]]
     then
-      ${params.PORTHOMCL_PATH}/porthomcl.sh -t ${task.cpus} .
-      ${params.PORTHOMCL_PATH}/orthomclMclToGroups ORTHOMCL 0 < 8.all.ort.group > all_orthomcl.out
+      ${params.ORTHOFINDER_PATH}/orthofinder.py -f 0.input_faa/ -o results -t ${task.cpus}
+
+      # filter out clusters with single gene.
+      awk 'BEGIN { FS="[ ]" }; { if (\$3) print \$0 }' results/*/Orthogroups/Orthogroups.txt > all_orthomcl.out
     else
       touch all_orthomcl.out
     fi
     """
   }
 } else {
-  // process empty_orthomcl {
-  //   publishDir params.do_all_vs_all ? "${params.REFERENCE_PATH}/Reference/_all" : "${params.REFERENCE_PATH}/Ref_${grp}/_all", mode: 'copy'
-
-  //   input:
-  //     tuple val(grp), path from prots
-    
-  //   output:
-  //     path "all_orthomcl.out"
-
-  //   """
-  //   touch all_orthomcl.out
-  //   """
-  // }
-  process run_orthofinder {
-    cpus params.porthomcl_threads
-    debug true
+  process empty_orthogroups {
     publishDir params.do_all_vs_all ? "${params.REFERENCE_PATH}/Reference/_all" : "${params.REFERENCE_PATH}/Ref_${grp}/_all", mode: 'copy'
 
     input:
-      tuple val(grp), path("0.input_faa/*") from prots
+      tuple val(grp), path from prots
     
     output:
       path "all_orthomcl.out"
-    
+
     """
-    orgs=`ls 0.input_faa | wc -l`
-    if [[ \$orgs -gt 1 ]]
-    then      
-      ${params.ORTHOFINDER_PATH}/orthofinder.py -f 0.input_faa/ -o results -t ${task.cpus}
-      
-      # filter out clusters with single gene.
-      awk 'BEGIN { FS="[ ]" }; { if (\$3) print \$0 }' results/*/Orthogroups/Orthogroups.txt > all_orthomcl.out
-    else
       touch all_orthomcl.out
+      touch all_orthomcl.out
+    fi
+    touch all_orthomcl.out
     fi
     """
   }

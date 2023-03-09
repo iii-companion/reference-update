@@ -7,7 +7,6 @@ params {
     COMPANION_BIN_PATH      = "${HOME}/companion/bin/"
     COMPANION_SCRIPT_PATH   = "${HOME}/companion/annot.nf"
     EUPATHWS_SCRIPTS_PATH   = "${HOME}/eupathws/scripts/"
-    PORTHOMCL_PATH          = "${HOME}/PorthoMCL"
     ORTHOFINDER_PATH        = "${HOME}/OrthoFinder_source"
 
     // path to publish the Reference directories to
@@ -22,12 +21,12 @@ params {
     // OrthoDB parameters
     orthodb_path = "https://v100.orthodb.org/download/odb10_fungi_fasta.tar.gz"
 
-    // PorthoMCL parameters
-    porthomcl_threads = 4
+    // OrthoFinder parameters
+    diamond_threads = 4
 
     // enable/disable parts of the pipeline
     do_augustus = true
-    do_orthomcl = true
+    do_orthofinder = true
     do_all_vs_all = false
     validate_refs = true
 
