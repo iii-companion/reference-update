@@ -14,8 +14,6 @@ nextflow run reference_update.nf [OPTIONS]
 * AUGUSTUS
 * Companion
 * EuPathWS
-* PorthoMCL
-    * Perl 5.x
-    * Python 2.x
-    * NCBI Blast
-    * MCL
+* OrthoFinder
+    * Python 3
+    * SciPy
