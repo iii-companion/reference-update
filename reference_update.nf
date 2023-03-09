@@ -235,11 +235,7 @@ if (params.do_orthofinder) {
       path "all_orthomcl.out"
 
     """
-      touch all_orthomcl.out
-      touch all_orthomcl.out
-    fi
     touch all_orthomcl.out
-    fi
     """
   }
 }
