@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=1
 
-VERSION = 0.1
+VERSION = 0.1.1
 
 process create_orthodb {
   afterScript 'rm -rf */Rawdata'
@@ -53,6 +53,7 @@ if (!params.from_local){
         path '*_Genome.fasta' into org_fasta
         path '*.gaf'
         path '*_chr.json' into org_chrs
+        path '*_meta.json' into org_meta
         stdout org_ch
         
       """
@@ -81,7 +82,8 @@ if (!params.from_local){
       path '*_Proteins.fasta', includeInputs: true
       path '*_Genome.fasta', includeInputs: true into org_fasta
       path '*.gaf', includeInputs: true
-      path '*_chr.json' into org_chrs
+      path '*_chr.json', includeInputs: true into org_chrs
+      path '*_meta.json', includeInputs: true into org_meta
       path 'all_annotated_proteins.fasta'
       stdout org_ch
     
@@ -132,6 +134,7 @@ process prepare_references {
     input:
       path "*" from gff3_out.collect()
       path "*" from org_chrs.collect()
+      path "*" from org_meta.collect()
 
     output:
       file "references-in-*.json" into references_in
