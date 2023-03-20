@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=1
 
-VERSION = 0.1.1
+VERSION = "0.1.1"
 
 process create_orthodb {
   afterScript 'rm -rf */Rawdata'
@@ -18,7 +18,7 @@ process create_orthodb {
   if [[ ${orthodb_path} =~ \$url_regex ]]; then wget ${orthodb_path}; else ln -s ${orthodb_path}; fi
 
   if [[ `ls *.tar.gz 2> /dev/null` ]]; then tar -xvf *.tar.gz ; rm *.tar.gz; fi
-  
+
   cat */Rawdata/* > orthodb.fasta
   """
 }
@@ -26,7 +26,7 @@ process create_orthodb {
 if (!params.from_local){
   process get_reference_species {
       conda 'environment.yml'
-      
+
       output:
         stdout species_ch
 
@@ -55,7 +55,7 @@ if (!params.from_local){
         path '*_chr.json' into org_chrs
         path '*_meta.json' into org_meta
         stdout org_ch
-        
+
       """
       ${params.EUPATHWS_SCRIPTS_PATH}/get_organism -l ${params.veupathdb_username}:${params.veupathdb_password} ${params.veupathdb_domain} \"${org}\"
       rename "s/-| /_/g"  *
@@ -86,7 +86,7 @@ if (!params.from_local){
       path '*_meta.json', includeInputs: true into org_meta
       path 'all_annotated_proteins.fasta'
       stdout org_ch
-    
+
     """
     rename "s/-| /_/g"  *
     rename "s/[\\)\\(]//g" *
@@ -109,13 +109,13 @@ org_ch.into{
 }
 
 if (params.do_augustus) {
-  augustus_org_ch.splitText().map{it -> it.trim()}.set { org } 
+  augustus_org_ch.splitText().map{it -> it.trim()}.set { org }
   process train_augustus {
       input:
         val x from org
         path "*" from org_gff3
         path "*" from org_fasta_augustus
-      
+
       output:
         path "${x}.gff3" into gff3_out
 
@@ -139,11 +139,11 @@ process prepare_references {
     output:
       file "references-in-*.json" into references_in
       path "groups.txt" into groups
-      
+
     """
     for x in *.gff3; do python3 ${baseDir}/bin/parse_chromosomes.py \$x; done > ChromosomeFile.txt
     ls *.gff3 | awk -F'[_]' '{print \$1}' | sort | uniq -c | awk '{if (\$1 > 0) print \$2}' > groups.txt
-    for x in `cat groups.txt`; do ls \$x*.gff3 | perl ${baseDir}/bin/generateReferences-i.json.pl ${params.REFERENCE_PATH} \$x ${params.AUGUSTUS_CONFIG_PATH} ${VERSION} > references-in-\$x.json; done    
+    for x in `cat groups.txt`; do ls \$x*.gff3 | perl ${baseDir}/bin/generateReferences-i.json.pl ${params.REFERENCE_PATH} \$x ${params.AUGUSTUS_CONFIG_PATH} ${VERSION} > references-in-\$x.json; done
     """
 }
 
@@ -163,7 +163,7 @@ if (!params.do_all_vs_all){
       input:
         val x from group
         file "*" from references_in
-      
+
       output:
         path "*", type: "dir"
         path "references.json" into refs
@@ -183,11 +183,11 @@ if (!params.do_all_vs_all){
 } else {
   process update_all_references{
     debug true
-    publishDir "${params.REFERENCE_PATH}/Reference", mode: 'copy'        
+    publishDir "${params.REFERENCE_PATH}/Reference", mode: 'copy'
 
     input:
       file "*" from references_in
-    
+
     output:
       path "*", type: "dir"
       path "references.json" into refs
@@ -210,7 +210,7 @@ if (params.do_orthofinder) {
 
     input:
       tuple val(grp), path("0.input_faa/*") from prots
-    
+
     output:
       path "all_orthomcl.out"
 
@@ -233,7 +233,7 @@ if (params.do_orthofinder) {
 
     input:
       tuple val(grp), path from prots
-    
+
     output:
       path "all_orthomcl.out"
 
@@ -250,7 +250,7 @@ if (params.validate_refs) {
 
       input:
         path "*" from org_fasta_validation
-    
+
       output:
         path '*.sampled.fa' into org_fasta_sampled
 
@@ -270,10 +270,10 @@ if (params.validate_refs) {
     process full_fasta_for_validation {
       input:
         path "*" from org_fasta_validation
-      
+
       output:
         path '*.sampled.fa' into org_fasta_sampled
-      
+
       """
       in=\$(basename *_Genome.fasta)
       out=\$in.sampled.fa
@@ -294,8 +294,8 @@ if (params.validate_refs) {
 
     input:
       val ref_d from ref_dir
-      path "references.json" from refs.collect()      
-    
+      path "references.json" from refs.collect()
+
     output:
       val ref_d into ref_dir
 
@@ -324,7 +324,7 @@ if (params.validate_refs) {
 
     input:
       path "*" from org_fasta_sampled.collect()
-      val ref_species from org      
+      val ref_species from org
       val ref_d from ref_dir_val
 
     output:
@@ -350,7 +350,7 @@ if (params.validate_refs) {
     input:
       path "*" from exitcode.collect()
       val ref_d from ref_dir_filt
-    
+
     """
     for x in ${ref_d}/failed_refs.txt; do
       refs=`grep -Ril ${params.REFERENCE_PATH}/*/references.json -e '\$x'`
