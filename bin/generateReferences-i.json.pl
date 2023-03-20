@@ -48,7 +48,7 @@ if (-e $refs){
 tie my $timestamp, 'Tie::Scalar::Timestamp';
 
 print "{\n";
-print " \"version\" : $v,\n";
+print " \"version\" : \"$v\",\n";
 # print " \"release\" : $rel,\n";
 print " \"timestamp\" : \"$timestamp\",\n";
 print " \"species\" : {\n";
