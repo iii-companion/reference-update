@@ -28,6 +28,6 @@ params {
     do_augustus = true
     do_orthofinder = true
     do_all_vs_all = false
-    validate_refs = true
+    validate_refs = false
 
 }
