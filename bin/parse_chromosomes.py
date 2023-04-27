@@ -13,6 +13,7 @@ patterns = [
     "([MDCLXVI]+[a-z]?)"
 ]
 
+
 class ChromosomeParser:
     def __init__(self, gff) -> None:
         self.species = ''
@@ -22,21 +23,21 @@ class ChromosomeParser:
         self.sequence_regions = []
         self.chr_candidates = []
         self._parse(gff)
-    
+
     @property
     def regex(self) -> str:
         return "{}{}{}".format(self.prefix, self.pattern, self.suffix)
-    
+
     def __repr__(self) -> str:
         return "\t".join(filter(None, (self.species, self.regex)))
-    
+
     def _parse(self, gff) -> None:
         self.species, _ = os.path.splitext(os.path.basename(gff))
         with open(gff, 'rt') as f:
             data = f.readlines()
-        self.sequence_regions = [list(filter(None, l.split(" ")))[1] for l in data if l.startswith("##sequence-region")]
+        self.sequence_regions = [list(filter(None, li.split(" ")))[1] for li in data if li.startswith("##sequence-region")]
         self.chr_candidates = [r for r in self.sequence_regions if {".", "_"}.intersection(r)]
-    
+
     def generate_regex(self) -> None:
         self.has_suffix()
         prefix_pool = self._iter_prefix_pool()
@@ -60,7 +61,7 @@ class ChromosomeParser:
                         max_match = len_match
                         self.prefix = prefix
                         self.pattern = pattern
-        
+
     def has_suffix(self) -> bool:
         """
         Assume any sequence_region with a version number "_v#" is a likely candidate for a chromosome.
@@ -72,23 +73,24 @@ class ChromosomeParser:
             self.suffix = re.search(r"_v\d+", with_suffix[0]).group()
             return True
         return False
-    
+
     def _iter_prefix_pool(self):
         yield from common_prefixes(self.chr_candidates)
         # yield from [
         #     common_prefixes(self.chr_candidates),
         #     (self.chr_candidates[0].split("_")[0] + "_", 1),
         # ]
-    
+
     def correct_prefix(self):
         try:
             r = re.compile(r"{}$".format(self.regex), re.IGNORECASE)
             first_match = list(filter(r.match, self.chr_candidates))[0]
-            prefix = re.split('_|\.', first_match)[0]
+            prefix = re.split(r"_|\.", first_match)[0]
             separator = first_match.split(prefix)[1][0]
             self.prefix = prefix + separator
-        except:
+        except Exception:
             print(self.species)
+
 
 def common_prefixes(li):
     prefixes = []
@@ -104,7 +106,7 @@ def common_prefixes(li):
                     prefixes.append((''.join(prefix), threshold))
                     break
                 threshold = count
-            prefix.append(char)    
+            prefix.append(char)
     return sorted(prefixes, key=itemgetter(1))
 
 
