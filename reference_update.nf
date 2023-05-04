@@ -4,7 +4,7 @@ nextflow.enable.dsl=1
 VERSION = "0.1.1"
 
 process create_orthodb {
-  afterScript 'rm -rf */Rawdata'
+  afterScript 'rm *.fa'
 
   input:
     val orthodb_path from "${params.orthodb_path}"
@@ -13,13 +13,13 @@ process create_orthodb {
     path "orthodb.fasta" into orthodb_fasta
 
   """
+  touch orthodb.fasta
+
   url_regex='^(https?|ftp|file)://[-A-Za-z0-9\\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\\+&@#/%=~_|]\\.[-A-Za-z0-9\\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\\+&@#/%=~_|]\$'
 
   if [[ ${orthodb_path} =~ \$url_regex ]]; then wget ${orthodb_path}; else ln -s ${orthodb_path}; fi
 
-  if [[ `ls *.tar.gz 2> /dev/null` ]]; then tar -xvf *.tar.gz ; rm *.tar.gz; fi
-
-  cat */Rawdata/* > orthodb.fasta
+  if [[ `ls *.fa.gz 2> /dev/null` ]]; then gunzip *.fa.gz ; cat *.fa > orthodb.fasta; fi
   """
 }
 

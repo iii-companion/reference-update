@@ -19,7 +19,8 @@ params {
     from_local = ""
 
     // OrthoDB parameters
-    orthodb_path = "https://v100.orthodb.org/download/odb10_fungi_fasta.tar.gz"
+    // See odb11 links here: https://bioinf.uni-greifswald.de/bioinf/partitioned_odb11/
+    orthodb_path = "https://bioinf.uni-greifswald.de/bioinf/partitioned_odb11/Fungi.fa.gz"
 
     // OrthoFinder parameters
     diamond_threads = 4
