@@ -19,7 +19,9 @@ process create_orthodb {
 
   if [[ ${orthodb_path} =~ \$url_regex ]]; then wget ${orthodb_path}; else ln -s ${orthodb_path}; fi
 
-  if [[ `ls *.fa.gz 2> /dev/null` ]]; then gunzip *.fa.gz ; cat *.fa > orthodb.fasta; fi
+  if [[ `ls *.fa.gz 2> /dev/null` ]]; then gunzip -f *.fa.gz ; fi
+
+  if [[ `ls *.fa 2> /dev/null` ]]; then cat *.fa > orthodb.fasta; fi
   """
 }
 
