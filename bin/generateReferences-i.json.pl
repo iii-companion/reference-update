@@ -52,7 +52,7 @@ print "{\n";
 print " \"version\" : \"$v\",\n";
 # print " \"release\" : $rel,\n";
 print " \"timestamp\" : \"$timestamp\",\n";
-if ($domain != "null"){
+if ($domain ne "null"){
     print " \"domain\" : \"$domain\",\n";
 }
 print " \"species\" : {\n";
@@ -79,7 +79,7 @@ while(<STDIN>){
     if (-d "$augCfgPath/species/$root"){
         print "      \"augustus_model\": \"$augCfgPath/species/$root\",\n";
     }
-    if (length($chrsJSON) > 0){
+    if (defined($chrsJSON) and $chrsJSON ne '{}'){
 	    print "      \"name\" : \"$name - in chromosomes\",\n";
     } else {
 	    print "      \"name\" : \"$name\",\n";
